@@ -67,6 +67,61 @@ Ansible плейбуки рабочие. CI/CD тоже.
 
 ```mermaid
 graph TB
+    %% Стили
+    classDef user fill:#ccccff,stroke:#333
+    classDef client fill:#99ccff,stroke:#333
+    classDef backend fill:#99ff99,stroke:#333
+    classDef storage fill:#ffcc99,stroke:#333
+    classDef ai fill:#cc99ff,stroke:#333
+    classDef monitoring fill:#ffff99,stroke:#333
+    
+    %% Пользователи
+    WebUser[Веб-пользователь]:::user
+    MobileUser[Мобильный пользователь<br/>Android/iOS]:::user
+    Admin[Администратор/DevOps]:::user
+    
+    %% Клиентские приложения
+    WebApp[Веб-приложение<br/>Vue.js + Shadcn/vue]:::client
+    MobileApp[Мобильные приложения<br/>Android & iOS]:::client
+    
+    %% Backend сервисы
+    API[API сервер<br/>Django + DRF]:::backend
+    WS[WebSocket сервер<br/>Django Channels]:::backend
+    
+    %% Внешние сервисы
+    LLM[LLM сервис<br/>Ollama]:::ai
+    
+    %% Хранилища данных
+    DB[Базы данных<br/>PostgreSQL + Redis]:::storage
+    
+    %% Мониторинг
+    Monitoring[Мониторинг<br/>Grafana + Prometheus<br/>+ Loki + Tempo]:::monitoring
+    
+    %% Взаимодействия
+    WebUser -->|HTTP/WebSocket| WebApp
+    MobileUser -->|HTTP/WebSocket| MobileApp
+    
+    WebApp -->|API запросы| API
+    WebApp -->|WebSocket| WS
+    MobileApp -->|API запросы| API
+    MobileApp -->|WebSocket| WS
+    
+    API -->|Запросы| LLM
+    API -->|Чтение/запись| DB
+    WS -->|Pub/Sub| DB
+    
+    %% Мониторинг и администрирование
+    Admin -->|Конфигурация<br/>и управление| Monitoring
+    API -.->|Метрики и логи| Monitoring
+    WS -.->|Метрики и логи| Monitoring
+    DB -.->|Метрики| Monitoring
+    LLM -.->|Метрики| Monitoring
+```
+
+### Уровень 2
+
+```mermaid
+graph TB
     %% Стили для разных типов компонентов
     classDef waf fill:#ff9999,stroke:#333,stroke-width:2px
     classDef frontend fill:#99ccff,stroke:#333
@@ -184,59 +239,4 @@ graph TB
     CeleryBeat -.->|При необходимости| CeleryWorker
     CeleryWorker -.->|Использует| Redis
     CeleryWorker -.->|Использует| DB
-```
-
-### Уровень 2
-
-```mermaid
-graph TB
-    %% Стили
-    classDef user fill:#ccccff,stroke:#333
-    classDef client fill:#99ccff,stroke:#333
-    classDef backend fill:#99ff99,stroke:#333
-    classDef storage fill:#ffcc99,stroke:#333
-    classDef ai fill:#cc99ff,stroke:#333
-    classDef monitoring fill:#ffff99,stroke:#333
-    
-    %% Пользователи
-    WebUser[Веб-пользователь]:::user
-    MobileUser[Мобильный пользователь<br/>Android/iOS]:::user
-    Admin[Администратор/DevOps]:::user
-    
-    %% Клиентские приложения
-    WebApp[Веб-приложение<br/>Vue.js + Shadcn/vue]:::client
-    MobileApp[Мобильные приложения<br/>Android & iOS]:::client
-    
-    %% Backend сервисы
-    API[API сервер<br/>Django + DRF]:::backend
-    WS[WebSocket сервер<br/>Django Channels]:::backend
-    
-    %% Внешние сервисы
-    LLM[LLM сервис<br/>Ollama]:::ai
-    
-    %% Хранилища данных
-    DB[Базы данных<br/>PostgreSQL + Redis]:::storage
-    
-    %% Мониторинг
-    Monitoring[Мониторинг<br/>Grafana + Prometheus<br/>+ Loki + Tempo]:::monitoring
-    
-    %% Взаимодействия
-    WebUser -->|HTTP/WebSocket| WebApp
-    MobileUser -->|HTTP/WebSocket| MobileApp
-    
-    WebApp -->|API запросы| API
-    WebApp -->|WebSocket| WS
-    MobileApp -->|API запросы| API
-    MobileApp -->|WebSocket| WS
-    
-    API -->|Запросы| LLM
-    API -->|Чтение/запись| DB
-    WS -->|Pub/Sub| DB
-    
-    %% Мониторинг и администрирование
-    Admin -->|Конфигурация<br/>и управление| Monitoring
-    API -.->|Метрики и логи| Monitoring
-    WS -.->|Метрики и логи| Monitoring
-    DB -.->|Метрики| Monitoring
-    LLM -.->|Метрики| Monitoring
 ```
