@@ -238,9 +238,9 @@ services:
     volumes:
       - ../tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
       - tempo_data:/var/tempo
-    ports:
-      - "3200:3200"
-      - "4318:4318"
+    expose:
+      - "3200"
+      - "4318"
     restart: always
     networks:
       - hm_net
@@ -263,6 +263,53 @@ services:
     restart: always
     networks:
       - hm_net
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    networks:
+      - hm_net
+    pid: host
+    restart: always
+    expose: 
+      - 9100
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.ignored-mount-points"
+      - "^/(rootfs/)?(dev|etc|host|proc|run|sys|volume1)($$|/)"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    expose:
+      - 8080
+    networks:
+      - hm_net
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: always
+
+  smartctl_exporter:
+    image: matusnovak/prometheus-smartctl:latest
+    container_name: smartctl-exporter
+    privileged: true
+    environment:
+      - "SMARTCTL_METRICS_FILE_ENABLE=True"
+    networks:
+      - hm_net
+    expose:
+      - 9902
+    volumes:
+      - ./tmp/:/metrics/
+    restart: always
 
 volumes:
   redis_data:

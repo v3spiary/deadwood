@@ -15,5 +15,4 @@ python3 manage.py initdb
 
 exec uvicorn config.asgi:application \
   --host 0.0.0.0 \
-  --port 8000 \
-  --reload
+  --port 8000

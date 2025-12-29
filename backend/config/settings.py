@@ -9,6 +9,16 @@ from pathlib import Path
 from celery.schedules import crontab
 from django.core.management.utils import get_random_secret_key
 
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.django import DjangoInstrumentor
+from opentelemetry.instrumentation.redis import RedisInstrumentor
+from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
+from opentelemetry.instrumentation.celery import CeleryInstrumentor
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = get_random_secret_key()
@@ -83,7 +93,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "django_prometheus.middleware.PrometheusBeforeMiddleware",  # Prometheus: начало запроса
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -92,12 +102,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django_prometheus.middleware.PrometheusAfterMiddleware",  # Prometheus: конец запроса
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
-
-# Настройки Prometheus
-PROMETHEUS_EXPORT_MIGRATIONS = False  # Отключаем экспорт миграций
-PROMETHEUS_LATENCY_BUCKETS = (0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0, 25.0, 50.0, 75.0, float("inf"))
 
 # Настройки OpenTelemetry
 OTEL_ENABLED = environ.get("OTEL_ENABLED", "false").lower() == "true"
@@ -105,50 +111,29 @@ OTEL_EXPORTER_OTLP_ENDPOINT = environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "http:/
 OTEL_SERVICE_NAME = environ.get("OTEL_SERVICE_NAME", "hismind-api")
 OTEL_PYTHON_LOG_CORRELATION = environ.get("OTEL_PYTHON_LOG_CORRELATION", "true").lower() == "true"
 
-if OTEL_ENABLED:
-    INSTALLED_APPS.insert(0, "opentelemetry.instrumentation.django")
-    
-    # Инициализация OpenTelemetry
-    from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
-    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-    from opentelemetry.instrumentation.django import DjangoInstrumentor
-    from opentelemetry.instrumentation.redis import RedisInstrumentor
-    from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
-    from opentelemetry.instrumentation.celery import CeleryInstrumentor
-    from opentelemetry.instrumentation.logging import LoggingInstrumentor
-    
-    # Настройка провайдера трассировки
-    trace.set_tracer_provider(TracerProvider())
-    
-    # Настройка экспортера для Tempo
-    otlp_exporter = OTLPSpanExporter(
-        endpoint=OTEL_EXPORTER_OTLP_ENDPOINT,
-        insecure=True,
-    )
-    
-    # Добавление процессора для пакетной обработки
-    span_processor = BatchSpanProcessor(otlp_exporter)
-    trace.get_tracer_provider().add_span_processor(span_processor)
-    
-    # Инструментация Django
-    DjangoInstrumentor().instrument()
-    
-    # Инструментация Redis
-    RedisInstrumentor().instrument()
-    
-    # Инструментация PostgreSQL
-    Psycopg2Instrumentor().instrument()
-    
-    # Инструментация Celery
-    CeleryInstrumentor().instrument()
-    
-    # Инструментация логирования для корреляции логов с трейсами
-    # if OTEL_PYTHON_LOG_CORRELATION:
-    #    LoggingInstrumentor().instrument()
+# Настройка провайдера трассировки
+trace.set_tracer_provider(TracerProvider())
 
-    LoggingInstrumentor().instrument()
+# Настройка экспортера для Tempo
+otlp_exporter = OTLPSpanExporter(
+    endpoint=OTEL_EXPORTER_OTLP_ENDPOINT,
+    insecure=True,
+)
+
+# Добавление процессора для пакетной обработки
+span_processor = BatchSpanProcessor(otlp_exporter)
+trace.get_tracer_provider().add_span_processor(span_processor)
+
+# Инструментация Django
+DjangoInstrumentor().instrument()
+RedisInstrumentor().instrument()
+Psycopg2Instrumentor().instrument()
+CeleryInstrumentor().instrument()
+LoggingInstrumentor().instrument()
+
+# Настройки Prometheus
+PROMETHEUS_EXPORT_MIGRATIONS = False  # Отключаем экспорт миграций
+PROMETHEUS_LATENCY_BUCKETS = (0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0, 25.0, 50.0, 75.0, float("inf"))
 
 CHANNEL_LAYERS = {
     "default": {
@@ -301,17 +286,6 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": environ.get("POSTGRES_DB"),
-        "USER": environ.get("POSTGRES_USER"),
-        "PASSWORD": environ.get("POSTGRES_PASSWORD"),
-        "HOST": environ.get("POSTGRES_HOST"),
-        "PORT": environ.get("POSTGRES_PORT", "5432"),
-    }
-}
 
 # Prometheus для базы данных
 DATABASES = {

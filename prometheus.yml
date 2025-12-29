@@ -3,12 +3,30 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
+  - job_name: "node_exporter"
+    static_configs:
+      - targets: ["node_exporter:9100"]
+        labels:
+          service: "node_exporter"
+
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]
+        labels:
+          service: "cadvisor"
+
+  - job_name: "smartctl_exporter"
+    static_configs:
+      - targets: ["smartctl_exporter:9902"]
+        labels:
+          service: "smartctl_exporter"
+
   - job_name: "django"
     metrics_path: /metrics
     static_configs:
       - targets: ["backend:8000"]
         labels:
-          service: "his-mind-backend"
+          service: "builder-platform-backend"
 
   - job_name: "loki"
     static_configs:
@@ -21,3 +39,4 @@ scrape_configs:
       - targets: ["promtail:9080"]
         labels:
           service: "promtail"
+

@@ -7,7 +7,7 @@ from django.utils.text import slugify
 import random
 from chatbot.models import Chat, Message
 from chatbot.serializers import ChatSerializer, MessageSerializer
-from .tasks import generate_ai_response
+#from .tasks import generate_ai_response
 
 import threading
 import urllib.request
