@@ -1,0 +1,21 @@
+# Ansible Galaxy requirements file
+# Установка: ansible-galaxy install -r requirements.yml
+
+roles:
+  # Альтернативная CIS-роль (на выбор)
+  - name: mvladislav.ansible-cis-ubuntu-2204  
+    src: https://github.com/MVladislav/ansible-cis-ubuntu-2204.git
+    version: main
+    scm: git
+
+  # Роль для установки rootless Docker
+  - name: konstruktoid.docker_rootless
+    src: https://github.com/konstruktoid/ansible-role-docker-rootless.git
+    version: main
+    scm: git
+
+collections:
+  - name: community.general
+    version: ">=7.0.0"
+  - name: ansible.posix
+    version: ">=1.4.0"

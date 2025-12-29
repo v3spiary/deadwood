@@ -1,0 +1,19 @@
+#!/bin/sh
+
+echo "DB not yet run..."
+
+while ! nc -z $DB_HOST $DB_PORT; do
+    sleep 0.1
+done
+
+echo "DB did run."
+
+python3 manage.py collectstatic --no-input
+python3 manage.py makemigrations --no-input
+python3 manage.py migrate --no-input
+python3 manage.py initdb
+
+exec uvicorn config.asgi:application \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --reload

@@ -1,0 +1,19 @@
+---
+- name: Complete CIS Hardening and Rootless Docker Setup
+  hosts: all
+  become: true
+  vars:
+    cis_ubuntu2204_section1: true
+    cis_ubuntu2204_section2: true
+    cis_ubuntu2204_section3: true
+    cis_ubuntu2204_section4: true
+    cis_ubuntu2204_section5: true
+    cis_ubuntu2204_section6: false # 6.1.1 зависает
+    cis_ubuntu2204_section7: true
+    cis_ubuntu2204_ssh_permit_root_login: "yes"
+    cis_ubuntu2204_ssh_password_authentication: "no"
+
+  tasks:
+    - name: Apply alternative CIS hardening
+      include_role:
+        name: mvladislav.ansible-cis-ubuntu-2204

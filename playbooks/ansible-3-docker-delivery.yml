@@ -1,0 +1,194 @@
+---
+- name: Deploy Docker stack from Selectel registry
+  hosts: all
+  become: yes
+  vars:
+    selectel_registry_url: "cr.selcloud.ru"
+    selectel_username: "{{ vault_selectel_username }}"
+    selectel_password: "{{ vault_selectel_password }}"
+    docker_compose_dir: "/opt/app/"
+    docker_compose_path: "/opt/app/docker-compose.yml"
+    app_directory: "/opt/app"
+    
+  tasks:
+    - name: Install rsync
+      apt:
+        name:
+          - rsync
+        state: present
+        update_cache: yes
+      tags: packages-setup
+
+    - name: Install Docker Compose plugin on Debian/Ubuntu
+      apt:
+        name: docker-compose-plugin
+        state: present
+        update_cache: yes
+      become: yes
+      
+    - name: Create application directory
+      file:
+        path: "{{ app_directory }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ ansible_user }}"
+      tags: setup
+      
+    - name: Deploy docker-compose.yml from template
+      template:
+        src: "{{ playbook_dir }}/../templates/docker-compose.yml.j2"
+        dest: "{{ docker_compose_path }}"
+        mode: '0644'
+        owner: "{{ ansible_user }}"
+      register: template_result
+      tags: config
+
+    - name: Create dir for tempo
+      file:
+        path: "{{ docker_compose_dir }}/tempo/"
+        state: directory
+
+    - name: Deploy tempo config from template
+      template:
+        src: "{{ playbook_dir }}/../templates/tempo.yaml.j2"
+        dest: "{{ docker_compose_dir }}/tempo/tempo.yaml"
+        mode: '0644'
+        owner: "{{ ansible_user }}"
+      tags: config
+
+    - name: Deploy loki config from template
+      template:
+        src: "{{ playbook_dir }}/../templates/loki-config.yaml.j2"
+        dest: "{{ docker_compose_dir }}/loki-config.yaml"
+        mode: '0644'
+        owner: "{{ ansible_user }}"
+      tags: config
+
+    - name: Deploy prometheus config from template
+      template:
+        src: "{{ playbook_dir }}/../templates/prometheus.yml.j2"
+        dest: "{{ docker_compose_dir }}/prometheus.yml"
+        mode: '0644'
+        owner: "{{ ansible_user }}"
+      tags: config
+
+    - name: Deploy promtail config from template
+      template:
+        src: "{{ playbook_dir }}/../templates/promtail-config.yml.j2"
+        dest: "{{ docker_compose_dir }}/promtail-config.yml"
+        mode: '0644'
+        owner: "{{ ansible_user }}"
+      tags: config
+
+    - name: Deploy grafana configs via rsync
+      synchronize:
+        src: "{{ playbook_dir }}/../grafana"
+        dest: "{{ docker_compose_dir }}/"
+        rsync_opts:
+          - "--archive"
+          - "--compress"
+          - "--delete"
+        delete: yes
+        recursive: yes
+
+    - name: Deploy waf configs via rsync
+      synchronize:
+        src: "{{ playbook_dir }}/../waf"
+        dest: "{{ docker_compose_dir }}/"
+        rsync_opts:
+          - "--archive"
+          - "--compress"
+          - "--delete"
+        delete: yes
+        recursive: yes
+
+    - name: Install pip on Debian/Ubuntu
+      apt:
+        name: python3-pip
+        state: present
+      become: yes
+      tags: auth
+
+    - name: Install required Python libraries for Docker modules
+      pip:
+        name:
+          - requests
+          - docker
+          - docker-compose
+        state: present
+      become: yes
+      tags: auth
+      
+    - name: Login to Selectel Docker registry
+      docker_login:
+        registry: "{{ selectel_registry_url }}"
+        username: "{{ selectel_username }}"
+        password: "{{ selectel_password }}"
+        state: present
+      tags: auth
+      
+    - name: Pull Docker images
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_directory }}"
+        pull: always
+        files:
+          - "{{ docker_compose_path }}"
+        state: stopped
+      when: template_result is changed
+      tags: pull
+      
+    - name: Start Docker stack
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_directory }}"
+        state: present
+        pull: always
+        files:
+          - "{{ docker_compose_path }}"
+      tags: deploy
+      register: docker_start_result
+      retries: 5
+      delay: 3
+      until: docker_start_result is succeeded
+      
+    - name: Verify stack health
+      command: "docker compose -f {{ docker_compose_path }} ps"
+      register: stack_status
+      changed_when: false
+      
+    - name: Display stack status
+      debug:
+        var: stack_status.stdout_lines
+
+    - name: Wait for Ollama API to be ready
+      uri:
+        url: http://localhost:11434/api/tags
+        method: GET
+        status_code: 200
+      register: ollama_status
+      until: ollama_status.status == 200
+      retries: 30
+      delay: 5
+      changed_when: false
+
+    - name: Load models to Ollama
+      uri:
+        url: http://localhost:11434/api/pull
+        method: POST
+        body_format: json
+        body:
+          name: "{{ item }}"
+      loop: "{{ ollama_models }}"
+      loop_control:
+        label: "{{ item }}"
+      register: pull_results
+      until: pull_results is succeeded
+      retries: 3
+      delay: 10
+      when: >
+        item not in (ollama_status.json.models | default([]) | map(attribute='name') | list)
+      vars:
+        ollama_models:
+          - evilfreelancer/o1_gigachat:20b
+
+    - name: Run model
+      shell: docker compose -f {{ docker_compose_path }} exec -d ollama ollama run evilfreelancer/o1_gigachat:20b ""

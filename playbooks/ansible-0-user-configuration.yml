@@ -1,0 +1,68 @@
+---
+- name: Harden SSH server configuration
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  vars:
+    ssh_port: 22
+    ssh_security_settings:
+      PasswordAuthentication: "no"
+      PubkeyAuthentication: "yes"
+      X11Forwarding: "no"
+      ClientAliveInterval: "300"
+      ClientAliveCountMax: "2"
+      MaxAuthTries: "3"
+      LoginGraceTime: "60"
+      Protocol: "2"
+      AllowUsers: ""
+
+  tasks:
+    - name: Update apt cache and upgrade packages
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+        upgrade: safe
+      
+    - name: Disable password authentication in SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        state: present
+        validate: 'sshd -t -f %s'
+      notify: restart ssh
+
+    - name: Ensure UFW is installed
+      apt:
+        name: ufw
+        state: present
+      
+    - name: Allow SSH on the new port
+      ufw:
+        rule: allow
+        port: "{{ ssh_port }}"
+        proto: tcp
+
+    - name: Enable UFW with default deny policy
+      ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+    - name: Install fail2ban
+      apt:
+        name: fail2ban
+        state: present
+      
+    - name: Ensure fail2ban is enabled and started
+      systemd:
+        name: fail2ban
+        enabled: yes
+        state: started
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restarted
