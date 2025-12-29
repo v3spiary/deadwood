@@ -36,6 +36,18 @@ services:
     networks:
       - hm_net
 
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    expose:
+      - "9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:postgres@db:5432/postgres?sslmode=disable"
+    networks:
+      - hm_net
+    depends_on:
+      - db
+    restart: always
+
   redis:
     image: redis:7.0.15
     container_name: redis
@@ -47,6 +59,17 @@ services:
       - redis_data:/data
     environment:
       - REDIS_PASSWORD=rediska
+    restart: always
+    networks:
+      - hm_net
+
+  redis_exporter:
+    image: oliver006/redis_exporter:latest
+    expose:
+      - "9121"
+    command: ["--redis.addr=redis:6379"]
+    # environment:
+    #   - REDIS_PASSWORD=rediska
     restart: always
     networks:
       - hm_net
@@ -295,20 +318,6 @@ services:
       - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
-    restart: always
-
-  smartctl_exporter:
-    image: matusnovak/prometheus-smartctl:latest
-    container_name: smartctl-exporter
-    privileged: true
-    environment:
-      - "SMARTCTL_METRICS_FILE_ENABLE=True"
-    networks:
-      - hm_net
-    expose:
-      - 9902
-    volumes:
-      - ./tmp/:/metrics/
     restart: always
 
 volumes:

@@ -15,11 +15,17 @@ scrape_configs:
         labels:
           service: "cadvisor"
 
-  - job_name: "smartctl_exporter"
+  - job_name: "postgresql"
     static_configs:
-      - targets: ["smartctl_exporter:9902"]
+      - targets: ["postgres_exporter:9187"]
         labels:
-          service: "smartctl_exporter"
+          service: "postgresql"
+
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis_exporter:9121"]
+        labels:
+          service: "redis"
 
   - job_name: "django"
     metrics_path: /metrics
