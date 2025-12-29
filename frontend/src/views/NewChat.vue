@@ -31,7 +31,7 @@ async function send() {
   <div class="min-h-[80vh] flex items-center justify-center p-6">
     <div class="w-full max-w-4xl mx-auto">
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-primary mb-2">HisMind</h1>
+        <h1 class="text-3xl font-bold text-primary mb-2">Buidler Platform</h1>
         <p class="text-lg text-muted-foreground">Your digital psychologist is here to help</p>
         <div class="flex justify-center items-center gap-2 mt-4 text-sm text-muted-foreground">
           <div class="flex items-center gap-1">

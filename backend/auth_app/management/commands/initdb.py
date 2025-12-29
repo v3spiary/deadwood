@@ -30,7 +30,7 @@ class Command(BaseCommand):
             logger.info("Администратор уже создан.")
         except Exception:
             admin_user = User.objects.create_superuser(
-                username="admin", email="admin@example.com", password="awfoh8siuehfgo8sejfgosej5gfo9sejgfsoe95jgsoe58gjser"
+                username="admin", email="admin@example.com", password="admin"
             )
             admin_group = Group.objects.get(name="Admins")
             admin_user.groups.add(admin_group)

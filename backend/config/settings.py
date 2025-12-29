@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = get_random_secret_key()
 
-DEBUG = False
+DEBUG = True
 
 HOST = environ.get("API_HOST")
 
@@ -80,7 +80,6 @@ INSTALLED_APPS = [
     # Кастомные приложения
     "auth_app",
     "chatbot",
-    "diary",
 ]
 
 MIDDLEWARE = [
@@ -204,7 +203,7 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "HisMind API",
+    "TITLE": "Builder Platform API",
     "DESCRIPTION": "",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,

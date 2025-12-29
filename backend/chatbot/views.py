@@ -31,28 +31,33 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"])
     def start_chat(self, request):
-        from .consumers import _generate_ai_sync
-        message = request.data.get("message", "").strip()
-        if not message:
-            return Response({"error": "Сообщение обязательно"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            from .consumers import _generate_ai_sync
+            message = request.data.get("message", "").strip()
+            if not message:
+                return Response({"error": "Сообщение обязательно"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # СОЗДАЁМ ЧАТ И СООБЩЕНИЕ
-        chat = Chat.objects.create(owner=request.user, name=message[:50])
-        Message.objects.create(
-            chat=chat,
-            sender=request.user,
-            content=message,
-            message_type="text",
-        )
+            # СОЗДАЁМ ЧАТ И СООБЩЕНИЕ
+            chat = Chat.objects.create(owner=request.user, name=message[:50])
+            Message.objects.create(
+                chat=chat,
+                sender=request.user,
+                content=message,
+                message_type="text",
+            )
 
-        # ЗАПУСКАЕМ AI В ПОТОКЕ
-        threading.Thread(
-            target=_generate_ai_sync,
-            args=(str(chat.id), message),
-            daemon=True
-        ).start()
+            # ЗАПУСКАЕМ AI В ПОТОКЕ
+            threading.Thread(
+                target=_generate_ai_sync,
+                args=(str(chat.id), message),
+                daemon=True
+            ).start()
 
-        return Response({"chat_id": str(chat.id)}, status=status.HTTP_201_CREATED)
+            return Response({"chat_id": str(chat.id)}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            logger.error(f"START CHAT ERROR: {e}", exc_info=True)
+            return Response({"chat_id": str(chat.id)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=True, methods=["get"])
     def messages(self, request, pk=None):

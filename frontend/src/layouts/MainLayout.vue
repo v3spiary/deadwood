@@ -78,7 +78,7 @@ watch(() => route.path, (newPath) => {
                 <BreadcrumbList>
                 <BreadcrumbItem class="hidden md:block">
                     <BreadcrumbLink href="/">
-                    HisMind
+                    Builder Platform
                     </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator class="hidden md:block" />

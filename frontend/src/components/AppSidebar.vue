@@ -172,7 +172,7 @@ watch(() => route.path, async () => {
                 <Command class="size-4" />
               </div>
               <div class="grid flex-1 text-left text-sm leading-tight">
-                <span class="truncate font-medium">HisMind</span>
+                <span class="truncate font-medium">Builer Platform</span>
                 <span class="truncate text-xs">Pilot version</span>
               </div>
             </a>

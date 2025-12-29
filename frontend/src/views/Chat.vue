@@ -9,6 +9,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea, InputGroupText } from "@/components/ui/input-group"
 import { Separator } from "@/components/ui/separator"
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircleIcon, CheckCircle2Icon, PopcornIcon } from 'lucide-vue-next'
+
 const authStore = useAuthStore()
 const route = useRoute()
 const chatId = route.params.id as string
@@ -41,6 +44,7 @@ async function loadChat() {
   try {
     const response = await api.get(`/chatbot/chats/${chatId}/messages/`)
     messages.value = response.data.results || []
+    //isError.value = false
   } catch (e) {
     console.error('Error loading chat:', e)
   }
@@ -88,12 +92,19 @@ function setupWebSocket() {
         last.id = data.message_id
       }
       pendingAIMessage.value = { id: '', content: '' }
+      //isError.value = false
       isWaiting.value = false
     }
   }
 
-  socket.onclose = () => { isWaiting.value = false }
-  socket.onerror = () => { isWaiting.value = false }
+  socket.onclose = () => { 
+    //isError.value = false 
+    isWaiting.value = false
+  }
+  socket.onerror = () => { 
+    isWaiting.value = false 
+    //isError.value = true
+  }
 }
 
 function addMessageToHistory(message: Message) {
@@ -108,6 +119,7 @@ function scrollToBottom() {
 }
 
 function sendMessage() {
+  //isError.value = false
   if (newMessage.value.trim() && !isWaiting.value) {
     isWaiting.value = true
     const userMessage = newMessage.value
@@ -121,7 +133,7 @@ function sendMessage() {
     })
 
     if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ message: userMessage }))  // ← БЕЗ chat_id
+      socket.send(JSON.stringify({ message: userMessage }))
     } else {
       isWaiting.value = false
     }
@@ -142,6 +154,7 @@ function sendMessage() {
 
         </div>
       </div>
+
     </div>
     <!-- Input panel -->
     <div class="p-4">

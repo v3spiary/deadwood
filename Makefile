@@ -6,6 +6,5 @@ prod:
 
 kill:
 	docker compose -f docker-compose/docker-compose-dev.yml down -v
-	docker compose -f docker-compose/docker-compose-prod.yml down -v
 
 .PHONY: dev prod kill

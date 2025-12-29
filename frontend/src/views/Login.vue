@@ -10,7 +10,7 @@ import LoginForm from "@/components/LoginForm.vue"
           <div class="flex h-6 w-6 items-center justify-center rounded-md">
             <Command class-name="size-4" />
           </div>
-          HisMind
+          Builder Platform
         </a>
       </div>
       <div class="flex flex-1 items-center justify-center">

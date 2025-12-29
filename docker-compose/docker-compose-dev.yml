@@ -11,8 +11,6 @@ services:
       - MODSECURITY_RULE_ENGINE=On
       - PARANOIA=1
     volumes:
-    #   - ../waf/nginx.conf:/etc/nginx/nginx.conf:ro
-    #   # - ./waf/modsecurity:/etc/nginx/modsecurity.d:ro
       - ../waf/custom-rules:/etc/nginx/custom-rules:ro
     networks:
       - hm_net
@@ -258,8 +256,6 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
-        #GF_SERVER_DOMAIN: localhost
-        #GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/"
     volumes:
       - grafana_data:/var/lib/grafana
       - ../grafana/provisioning:/etc/grafana/provisioning

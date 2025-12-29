@@ -19,17 +19,25 @@ def _generate_ai_sync(chat_id, prompt):
         group_name = f"chat_{chat_id}"
         full_response = ""
 
-        req = urllib.request.Request(
-            "http://ollama:11434/api/generate",
-            data=json.dumps({
-                "model": "evilfreelancer/o1_gigachat:20b",
-                "system": "Ты — эмпатичный цифровой психолог. Твоя роль — поддерживать диалог, выслушивать, задавать уточняющие вопросы и помогать пользователю разобраться в его чувствах. Ты всегда отвечаешь ТОЛЬКО на русском языке. КРИТИЧЕСКИ ВАЖНО: Любые внутренние рассуждения, анализ, размышления или промежуточные шаги ты должен держать в уме и НИКОГДА не включать в итоговый ответ пользователю. Твой ответ должен быть плавным, цельным, естественным и сразу готовым для чтения пользователем. Не используй теги <Thought>, <Output> или любые другие форматы, кроме обычного текста.",
-                "prompt": f"{prompt}",
-                "stream": True
-            }).encode(),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
+        try:
+            req = urllib.request.Request(
+                "http://ollama:11434/api/generate",
+                data=json.dumps({
+                    "model": "",
+                    "system": "",
+                    "prompt": f"{prompt}",
+                    "stream": True
+                }).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+
+        except Exception as e:
+            async_to_sync(channel_layer.group_send)(
+                group_name,
+                {"type": "ai_complete", "message_id": "Ошибка. Модель недоступна."},
+            )
+            logger.error(f"[AI Thread] ERROR: {e}", exc_info=True)
 
         with urllib.request.urlopen(req) as resp:
             for line in resp:
@@ -61,6 +69,10 @@ def _generate_ai_sync(chat_id, prompt):
         )
 
     except Exception as e:
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {"type": "ai_complete", "message_id": "Произошла неизвестная ошибка."},
+        )
         logger.error(f"[AI Thread] ERROR: {e}", exc_info=True)
 
 class ServiceChatConsumer(AsyncWebsocketConsumer):
