@@ -63,9 +63,11 @@ RUN mkdir -p /var/log/django && \
 # STAGE 3: DRF REST API
 FROM base AS server
 
-RUN mkdir -p /home/app/web/frontend_dist
+RUN mkdir -p /app/frontend_dist
 
-COPY --from=frontend /app/dist /home/app/web/frontend_dist
+RUN mkdir -p /app/config/static
+
+COPY --from=frontend /app/dist /app/frontend_dist
 
 COPY backend/entrypoint.sh .
 

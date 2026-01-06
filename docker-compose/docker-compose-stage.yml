@@ -13,7 +13,7 @@ services:
     volumes:
       - ../waf/custom-rules:/etc/nginx/custom-rules:ro
     networks:
-      - hm_net
+      - deadwood_net
     depends_on:
       frontend:
         condition: deadwood
@@ -56,7 +56,7 @@ services:
       - global_logs:/var/log/django:rw
     restart: always
     networks:
-      - hm_net
+      - deadwood_net
 
   worker:
     build:
@@ -89,7 +89,7 @@ services:
       - global_logs:/var/log/django:ro
     restart: always
     networks:
-      - hm_net
+      - deadwood_net
 
   beat:
     build:
@@ -124,7 +124,7 @@ services:
       - global_logs:/var/log/django:ro
     restart: always
     networks:
-      - hm_net
+      - deadwood_net
 
   # ollama:
   #   image: ollama/ollama:latest
@@ -135,7 +135,7 @@ services:
   #     - ollama_data:/root/.ollama
   #   restart: always
   #   networks:
-  #     - hm_net
+  #     - deadwood_net
 
   db:
     image: postgres:17-alpine
@@ -152,7 +152,7 @@ services:
       POSTGRES_DB: "postgres"
     restart: always
     networks:
-      - hm_net
+      - deadwood_net
 
   postgres_exporter:
     image: prometheuscommunity/postgres-exporter:latest
@@ -161,7 +161,7 @@ services:
     environment:
       DATA_SOURCE_NAME: "postgresql://postgres:postgres@db:5432/postgres?sslmode=disable"
     networks:
-      - hm_net
+      - deadwood_net
     depends_on:
       - db
     restart: always
@@ -179,7 +179,7 @@ services:
       - REDIS_PASSWORD=rediska
     restart: always
     networks:
-      - hm_net
+      - deadwood_net
 
   redis_exporter:
     image: oliver006/redis_exporter:latest
@@ -190,7 +190,7 @@ services:
     #   - REDIS_PASSWORD=rediska
     restart: always
     networks:
-      - hm_net
+      - deadwood_net
 
   prometheus:
     image: prom/prometheus:latest
@@ -205,7 +205,7 @@ services:
       - "9090:9090"
     restart: always
     networks:
-      - hm_net
+      - deadwood_net
     depends_on:
       - backend
       - loki
@@ -223,7 +223,7 @@ services:
       - "3100:3100"
     restart: always
     networks:
-      - hm_net
+      - deadwood_net
 
   promtail:
     image: grafana/promtail:2.9.0
@@ -236,7 +236,7 @@ services:
       - loki
     restart: always
     networks:
-      - hm_net
+      - deadwood_net
 
   tempo:
     image: grafana/tempo:2.9.0
@@ -251,7 +251,7 @@ services:
       - "4318"
     restart: always
     networks:
-      - hm_net
+      - deadwood_net
 
   grafana:
     image: grafana/grafana:11.0.0
@@ -270,13 +270,13 @@ services:
       - ../grafana/dashboards:/var/lib/grafana/dashboards
     restart: always
     networks:
-      - hm_net
+      - deadwood_net
 
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: node_exporter
     networks:
-      - hm_net
+      - deadwood_net
     pid: host
     restart: always
     expose: 
@@ -297,7 +297,7 @@ services:
     expose:
       - 8080
     networks:
-      - hm_net
+      - deadwood_net
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -316,4 +316,4 @@ volumes:
   global_logs:
 
 networks:
-  hm_net:
+  deadwood_net:
