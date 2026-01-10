@@ -7,6 +7,9 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParameter, OpenApiTypes
+from drf_spectacular.types import OpenApiTypes
+
 from chatbot.models import Chat, Message
 from chatbot.serializers import ChatSerializer, MessageSerializer
 
@@ -16,6 +19,7 @@ from chatbot.serializers import ChatSerializer, MessageSerializer
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(tags=["Chatbot"])
 class ChatViewSet(viewsets.ModelViewSet):
     """Класс, описывающий логику API для чатов."""
 

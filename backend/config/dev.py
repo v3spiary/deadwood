@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "auth_app",
     "chatbot",
     "tracker",
+    "collector",
 ]
 
 MIDDLEWARE = [
