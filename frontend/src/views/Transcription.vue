@@ -54,7 +54,6 @@ const sending = ref(false)
             </div>
             <div class="uk-width-auto uk-text-nowrap">
 
-
                 <span class="uk-active" uk-filter-control="sort: data-date"><a class="uk-icon-link" href="#" uk-icon="icon: arrow-down" aria-label="Sort ascending"></a></span>
                 <span uk-filter-control="sort: data-date; order: desc"><a class="uk-icon-link" href="#" uk-icon="icon: arrow-up" aria-label="Sort descending"></a></span>
 
