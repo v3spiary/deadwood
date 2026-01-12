@@ -7,25 +7,16 @@ import { Activity, Container, Rocket, BookOpen, MicVocal, BrainCircuit, User } f
 <template>
   <div class="uk-flex uk-flex-column" style="min-height: 100vh;">
 
-    <!-- <nav class="uk-navbar-container uk-box-shadow-small" uk-navbar>
-      <div class="uk-navbar-left">
-        <img src="/logo.svg" width="70px" height="70px"/>
-      </div>
-      
-      <div class="uk-navbar-right">
-        <ul class="uk-navbar-nav">
-          <li><a href="" @click="authStore.logout">Logout</a></li>
-        </ul>
-      </div>
-    </nav> -->
-
     <div class="uk-background-primary">
         <nav class="uk-navbar-container uk-navbar-transparent uk-light">
             <div class="uk-container">
                 <div uk-navbar>
 
                     <div class="uk-navbar-left">
-                        <a class="uk-navbar-item uk-logo" href="#" aria-label="Back to Home"><img src="/logo.svg" style="filter: invert(1);" width="42px" height="42px"/></a>
+                        <a class="uk-navbar-item uk-logo" href="#" aria-label="Back to Home">
+                            <img src="/logo.svg" style="filter: invert(1);" width="42px" height="42px"/>
+                            <!-- <h4>DΞΛDWOOD</h4> -->
+                        </a>
                     </div>
 
                     <div class="uk-navbar-right">
@@ -115,3 +106,15 @@ import { Activity, Container, Rocket, BookOpen, MicVocal, BrainCircuit, User } f
     </main>
   </div>
 </template>
+
+<style>
+    @font-face {
+        font-family: namu;
+        src: url('/fonts/namu.ttf');
+    }
+
+    .uk-logo {
+        font-family: namu;
+        letter-spacing: 10px;
+    }
+</style>
