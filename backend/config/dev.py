@@ -96,6 +96,23 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
+# AI Settings
+AI_MAX_WORKERS = 3  # Максимальное количество параллельных AI генераций
+DEFAULT_AI_MODEL = "deepseek-r1:1.5b"  # Модель по умолчанию
+DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant."
+
+# Ollama Settings
+OLLAMA_API_URL = "http://ollama:11434/api/generate"
+OLLAMA_TIMEOUT = 300  # Таймаут в секундах (5 минут)
+
+# Chat Settings
+MAX_MESSAGE_LENGTH = 10000  # Максимальная длина сообщения
+MAX_ACTIVE_CHATS_PER_USER = 5  # Максимальное количество активных чатов
+
+# WebSocket Settings
+WEBSOCKET_PING_INTERVAL = 30  # Интервал ping в секундах
+WEBSOCKET_PING_TIMEOUT = 60  # Таймаут ping в секундах
+
 # Настройки OpenTelemetry
 # OTEL_ENABLED = environ.get("OTEL_ENABLED", "false").lower() == "true"
 # OTEL_EXPORTER_OTLP_ENDPOINT = environ.get(

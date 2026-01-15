@@ -1,0 +1,28 @@
+# Локальные директории Terraform (провайдеры, кеш)
+.terraform/
+
+# Файлы состояния
+*.tfstate
+*.tfstate.*
+
+# Файлы блокировок state
+.terraform.tfstate.lock.info
+
+# tfvars — обычно содержат секреты
+*.tfvars
+*.tfvars.json
+
+# Логи крэшей Terraform
+crash.log
+crash.*.log
+
+# План-артефакты
+*.tfplan
+
+# Локальные override'ы
+*_override.tf
+*_override.tf.json
+
+# Конфиги CLI
+.terraformrc
+terraform.rc

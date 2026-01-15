@@ -183,12 +183,24 @@ services:
   #   networks:
   #     - deadwood_dev_net
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: always
+    networks:
+      - deadwood_dev_net
+
 volumes:
   postgres_data_dev:
   redis_data_dev:
   backend_python_cache:
   frontend_node_modules:
   opensearch-data:
+  ollama_data:
 
 networks:
   deadwood_dev_net:

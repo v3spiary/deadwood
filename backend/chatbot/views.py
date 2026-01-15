@@ -2,6 +2,8 @@
 
 import logging
 import threading
+from django.conf import settings
+from django.db import transaction
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -11,7 +13,7 @@ from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParamete
 from drf_spectacular.types import OpenApiTypes
 
 from chatbot.models import Chat, Message
-from chatbot.serializers import ChatSerializer, MessageSerializer
+from chatbot.serializers import ChatSerializer, MessageSerializer, StartChatSerializer
 
 # from .tasks import generate_ai_response
 
@@ -35,38 +37,119 @@ class ChatViewSet(viewsets.ModelViewSet):
         """При создании чата автоматически устанавливается владелец."""
         serializer.save(owner=self.request.user)
 
+    # @action(detail=False, methods=["post"])
+    # def start_chat(self, request):
+    #     try:
+    #         from .consumers import _generate_ai_sync
+
+    #         message = request.data.get("message", "").strip()
+    #         if not message:
+    #             return Response(
+    #                 {"error": "Сообщение обязательно"},
+    #                 status=status.HTTP_400_BAD_REQUEST,
+    #             )
+
+    #         # СОЗДАЁМ ЧАТ И СООБЩЕНИЕ
+    #         chat = Chat.objects.create(owner=request.user, name=message[:50])
+    #         Message.objects.create(
+    #             chat=chat,
+    #             sender=request.user,
+    #             content=message,
+    #             message_type="text",
+    #         )
+
+    #         # ЗАПУСКАЕМ AI В ПОТОКЕ
+    #         threading.Thread(
+    #             target=_generate_ai_sync, args=(str(chat.id), message), daemon=True
+    #         ).start()
+
+    #         return Response({"chat_id": str(chat.id)}, status=status.HTTP_201_CREATED)
+
+    #     except Exception as e:
+    #         logger.error(f"START CHAT ERROR: {e}", exc_info=True)
+    #         return Response(
+    #             {"chat_id": ""}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+    #         )
+
     @action(detail=False, methods=["post"])
     def start_chat(self, request):
-        try:
-            from .consumers import _generate_ai_sync
-
-            message = request.data.get("message", "").strip()
-            if not message:
-                return Response(
-                    {"error": "Сообщение обязательно"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # СОЗДАЁМ ЧАТ И СООБЩЕНИЕ
-            chat = Chat.objects.create(owner=request.user, name=message[:50])
-            Message.objects.create(
-                chat=chat,
-                sender=request.user,
-                content=message,
-                message_type="text",
-            )
-
-            # ЗАПУСКАЕМ AI В ПОТОКЕ
-            threading.Thread(
-                target=_generate_ai_sync, args=(str(chat.id), message), daemon=True
-            ).start()
-
-            return Response({"chat_id": str(chat.id)}, status=status.HTTP_201_CREATED)
-
-        except Exception as e:
-            logger.error(f"START CHAT ERROR: {e}", exc_info=True)
+        """
+        Создает новый чат с первым сообщением.
+        
+        Пример запроса:
+        POST /api/chatbot/chats/start/
+        {
+            "message": "Привет, помоги мне с задачей"
+        }
+        
+        Ответ:
+        {
+            "chat_id": "uuid-чата",
+            "success": true,
+            "message": "Чат создан. AI генерирует ответ..."
+        }
+        """
+        serializer = StartChatSerializer(data=request.data)
+        if not serializer.is_valid():
             return Response(
-                {"chat_id": str(chat.id)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        message = serializer.validated_data['message']
+        
+        try:
+            # Создаем чат и сообщение
+            with transaction.atomic():
+                chat = Chat.objects.create(
+                    owner=request.user,
+                    name=message[:50]
+                )
+                
+                Message.objects.create(
+                    chat=chat,
+                    sender=request.user,
+                    content=message,
+                    message_type="text",
+                )
+                
+                # chat.touch()
+            
+            # Запускаем AI генерацию в фоне
+            from .consumers import _AI_EXECUTOR, OllamaClient
+            
+            future = _AI_EXECUTOR.submit(
+                OllamaClient.generate_response,
+                chat_id=str(chat.id),
+                prompt=message,
+                channel_layer=None,
+                group_name=None,
+            )
+            
+            # Начинаем отслеживание генерации
+            from .consumers import AIResponseTracker
+            AIResponseTracker.start_generation(str(chat.id), future)
+            
+            logger.info(f"Started chat {chat.id} for user {request.user.id}")
+            
+            return Response(
+                {
+                    "chat_id": str(chat.id),
+                    "success": True,
+                    "message": "Чат создан. AI генерирует ответ...",
+                    "redirect_url": f"/service/chat/{chat.id}"  # URL для фронтенда
+                },
+                status=status.HTTP_201_CREATED
+            )
+            
+        except Exception as e:
+            logger.error(f"Error starting chat: {e}", exc_info=True)
+            return Response(
+                {
+                    "error": "Не удалось создать чат",
+                    "details": str(e) if settings.DEBUG else None
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     @action(detail=True, methods=["get"])

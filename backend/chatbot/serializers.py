@@ -5,6 +5,23 @@ from rest_framework import serializers
 from chatbot.models import Chat, Message
 
 
+class StartChatSerializer(serializers.Serializer):
+    """Сериализатор для создания нового чата"""
+    message = serializers.CharField(
+        max_length=10000,
+        min_length=1,
+        required=True,
+        help_text="Первое сообщение в чате"
+    )
+    
+    def validate_message(self, value):
+        """Валидация сообщения"""
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Сообщение не может быть пустым")
+        return value
+    
+
 class MessageSerializer(serializers.ModelSerializer):
     """Сериализатор для сообщения в чате."""
 

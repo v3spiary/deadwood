@@ -40,7 +40,8 @@ networks:
 
 services:
   waf:
-    image: owasp/modsecurity-crs:4.21.0-nginx-alpine-202512071012
+    #image: owasp/modsecurity-crs:4.21.0-nginx-alpine-202512071012
+    build: ../waf
     container_name: waf-proxy
     ports:
       - "80:8080"

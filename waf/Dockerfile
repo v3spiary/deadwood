@@ -1,66 +1,82 @@
-# Это на будущее, добавить сюда надо еще сборку modsec модуля и через consul управление балансировкой нагрузки
-# также предусмотреть TLS сертификаты
+FROM nginx:1.28.1-alpine AS builder
 
-FROM buildpack-deps:bullseye
+ENV MODSECURITY_VERSION=v3.0.14
+ENV MODSECURITY_NGINX_VERSION=v1.0.4
 
-ENV NGINX_VERSION nginx-1.23.2
+RUN apk add --no-cache --virtual .build-deps \
+        alpine-sdk \
+        autoconf \
+        automake \
+        bison \
+        curl \
+        doxygen \
+        flex \
+        g++ \
+        gcc \
+        git \
+        libtool \
+        lmdb-dev \
+        lua5.4-dev \
+        make \
+        curl-dev \
+        pcre2-dev \
+        yajl-dev \
+        zlib-dev \
+        libxml2-dev \
+        geoip-dev \
+        pcre-dev \
+        linux-headers \
+        wget
 
-# Установка зависимостей
-RUN apt-get update && \
-    apt-get install -y ca-certificates openssl libssl-dev git && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR /opt
 
-# Создаем пользователя и группу nginx
-RUN groupadd -r nginx && \
-    useradd -r -g nginx -s /bin/false nginx
+RUN wget https://nginx.org/download/nginx-1.28.1.tar.gz \
+    && tar -xzf nginx-1.28.1.tar.gz \
+    && rm nginx-1.28.1.tar.gz
 
-# Скачиваем и распаковываем исходники Nginx
-RUN mkdir -p /tmp/build/nginx && \
-    cd /tmp/build/nginx && \
-    wget -O ${NGINX_VERSION}.tar.gz https://nginx.org/download/${NGINX_VERSION}.tar.gz && \
-    tar -zxf ${NGINX_VERSION}.tar.gz
+RUN git clone --depth 1 -b ${MODSECURITY_VERSION} https://github.com/owasp-modsecurity/ModSecurity.git
 
-# Клонируем репозиторий upsync модуля (для коннекта с Consul)
-RUN git clone https://github.com/weibocom/nginx-upsync-module.git /tmp/build/nginx-upsync-module
+RUN git clone --depth 1 -b ${MODSECURITY_NGINX_VERSION} https://github.com/owasp-modsecurity/ModSecurity-nginx.git
 
-# Собираем Nginx
-RUN cd /tmp/build/nginx/${NGINX_VERSION} && \
-    ./configure \
-        --sbin-path=/usr/local/sbin/nginx \
-        --conf-path=/etc/nginx/nginx.conf \
-        --error-log-path=/var/log/nginx/error.log \
-        --pid-path=/var/run/nginx/nginx.pid \
-        --lock-path=/var/lock/nginx/nginx.lock \
-        --http-log-path=/var/log/nginx/access.log \
-        --http-client-body-temp-path=/tmp/nginx-client-body \
-        --with-http_ssl_module \
-        --with-threads \
-        --with-ipv6 \
-        --add-dynamic-module=/tmp/build/nginx-upsync-module \
-        --with-debug && \
-    make -j $(getconf _NPROCESSORS_ONLN) && \
-    make install && \
-    mkdir -p /var/lock/nginx && \
-    mkdir -p /usr/local/nginx/conf/servers && \
-    mkdir -p /usr/local/nginx/proxy_temp && \
-    chown -R nginx:nginx /usr/local/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /var/run/nginx && \
-    rm -rf /tmp/build
+RUN cd /opt/ModSecurity \
+    && git submodule init \
+    && git submodule update \
+    && sed -i '/#include <memory>/a #include <cstdint>' \
+       headers/modsecurity/collection/collection.h \
+    && ./build.sh \
+    && ./configure --prefix=/usr/local/modsecurity --with-lmdb --with-pcre2 \
+    && make \
+    && make install \
+    && make clean
 
-# Перенаправляем логи в стандартный вывод контейнера
-RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
-    ln -sf /dev/stderr /var/log/nginx/error.log
+RUN cd /opt/nginx-1.28.1 \
+    && ./configure --with-compat --add-dynamic-module=/opt/ModSecurity-nginx \
+    && make modules \
+    && cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules \
+    && mkdir -p /etc/nginx/modsec \
+    && cp /opt/ModSecurity/unicode.mapping /etc/nginx/modsec/
 
-# Установка Nginx-конфига
-COPY nginx.conf /etc/nginx/nginx.conf
+FROM nginx:1.28.1-alpine AS final
 
-# Устанавливаем владельца для конфигурации NGINX
-RUN chown nginx:nginx /etc/nginx/nginx.conf
+RUN apk add --no-cache --virtual .runtime-deps \
+        lua5.4 \
+        yajl \
+        libstdc++ \
+        pcre2 \
+        lmdb \
+        geoip \
+        libxml2 \
+        curl
 
-EXPOSE 80
+RUN mkdir -p /etc/nginx/modules-available \
+    && echo "load_module modules/ngx_http_modsecurity_module.so;" > /etc/nginx/modules-available/50-modsecurity.conf \
+    && mkdir -p /etc/nginx/modules-enabled \
+    && ln -s /etc/nginx/modules-available/50-modsecurity.conf /etc/nginx/modules-enabled/
+COPY --from=builder /usr/local/modsecurity/ /usr/local/modsecurity/
+COPY --from=builder /etc/nginx/modules/ngx_http_modsecurity_module.so /etc/nginx/modules/
+COPY --from=builder /etc/nginx/modsec/unicode.mapping /etc/nginx/modsec/
 
-# Запуск NGINX от пользователя nginx
-USER nginx
-
-CMD ["nginx", "-g", "daemon off;"]
+LABEL maintainer="deadwood project proxy <nothing@fuck.off>" \
+      nginx_version="1.28.1" \
+      modsecurity_version="v3.0.14" \
+      modsecurity_nginx_version="v1.0.4"
