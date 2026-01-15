@@ -53,6 +53,7 @@ Deadwood project
 
 <summary>📐 <h2>Архитектура</h2></summary>
 
+<details>
 <summary><h3>C4 - L1</h3></summary>
 Содержимое подраздела.
 </details>
