@@ -47,20 +47,23 @@ Deadwood project
 <details>
 <summary>🏗️ <h2>Инфраструктура</h2></summary>
 
+</details>
+
 <details>
 
 <summary>📐 <h2>Архитектура</h2></summary>
-### C4 - L1
+
+<summary><h3>C4 - L1</h3></summary>
 Содержимое подраздела.
 </details>
 
 <details>
-<summary><h2>C4 - L2</h2></summary>
+<summary><h3>C4 - L2</h3></summary>
 Содержимое подраздела.
 </details>
 
 <details>
-<summary><h2>C4 - L3</h2></summary>
+<summary><h3>C4 - L3</h3></summary>
 
 Содержимое подраздела.
 
@@ -72,21 +75,21 @@ Deadwood project
 <summary>🌍 <h2>Описание окружений</h2></summary>
 
 <details>
-<summary>🟢 <h2>Dev</h2></summary>
+<summary>🟢 <h3>Dev</h3></summary>
 
 Содержимое подраздела.
 
 </details>
 
 <details>
-<summary>🟡 <h2>Stage</h2></summary>
+<summary>🟡 <h3>Stage</h3></summary>
 
 Содержимое подраздела.
 
 </details>
 
 <details>
-<summary>🔴 <h2>Prod</h2></summary>
+<summary>🔴 <h3>Prod</h3></summary>
 
 Содержимое подраздела.
 
