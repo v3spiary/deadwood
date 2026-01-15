@@ -1,7 +1,0 @@
-selectel_domain_name = "123456"
-selectel_username    = "svc_terraform"
-selectel_password    = "CHANGE_ME"
-project_id           = "00000000-0000-0000-0000-000000000000"
-
-tf_state_bucket      = "my-terraform-state"
-tf_state_region      = "ru-1"

@@ -1,31 +1,42 @@
 terraform {
-  required_version = ">= 1.6.0"
-
   required_providers {
-    selectel = {
+    selectel  = {
       source  = "selectel/selectel"
       version = "~> 6.0"
     }
     openstack = {
       source  = "terraform-provider-openstack/openstack"
-      version = ">= 2.1.0"
+      version = "2.1.0"
     }
   }
 }
 
 provider "selectel" {
-  domain_name = var.selectel_domain_name
-  username    = var.selectel_username
-  password    = var.selectel_password
-  auth_url    = "https://cloud.api.selcloud.ru/identity/v3/"
-  auth_region = var.region
+  domain_name = var.sel_domain_name
+  username    = var.sel_username
+  password    = var.sel_password
+  auth_region = var.sel_auth_region
+  auth_url    = var.sel_auth_url
+}
+
+resource "selectel_vpc_project_v2" "project_deadwood" {
+  name = "deadwood"
 }
 
 provider "openstack" {
   auth_url    = "https://cloud.api.selcloud.ru/identity/v3"
-  domain_name = var.selectel_domain_name
-  tenant_id   = var.project_id
-  user_name   = var.selectel_username
-  password    = var.selectel_password
-  region      = var.region
+  domain_name = var.sel_domain_name
+  tenant_id   = selectel_vpc_project_v2.project_deadwood.id
+  user_name   = var.sel_username
+  password    = var.sel_password
+  region      = var.sel_auth_region
+}
+
+resource "openstack_networking_network_v2" "network_1" {
+  name           = "private-network"
+  admin_state_up = "true"
+
+  depends_on = [
+    selectel_vpc_project_v2.project_deadwood
+  ]
 }
