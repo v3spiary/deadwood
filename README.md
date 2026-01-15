@@ -19,94 +19,78 @@ Deadwood project
 |  DB       |  ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white) ![Elasticsearch](https://img.shields.io/badge/elasticsearch-%230377CC.svg?style=for-the-badge&logo=elasticsearch&logoColor=white)   |
 |  AI       | ![nVIDIA](https://img.shields.io/badge/nVIDIA-%2376B900.svg?style=for-the-badge&logo=nVIDIA&logoColor=white) ![Ollama](https://img.shields.io/badge/ollama-%23000000.svg?style=for-the-badge&logo=ollama&logoColor=white) ![HuggingFace](https://img.shields.io/badge/huggingface-%23FFD21E.svg?style=for-the-badge&logo=huggingface&logoColor=white) ![LangChain](https://img.shields.io/badge/langchain-%231C3C3C.svg?style=for-the-badge&logo=langchain&logoColor=white) ![LangGraph](https://img.shields.io/badge/langgraph-%231C3C3C.svg?style=for-the-badge&logo=langgraph&logoColor=white)  |
 
-## Agenda
-
-<p align="center">
-<ul>
-<li><a href="#описание">Описание</a></li>
-<li><a href="#модель-угроз">Модель угроз</a></li>
-<li><a href="#инфраструктура">Инфраструктура</a></li>
-<li><a href="#архитектура">Архитектура</a></li>
-<ul>
-<li><a href="#dev">Dev</a></li>
-<li><a href="#stage">Stage</a></li>
-<li><a href="#prod">Prod</a></li>
-</ul>
-</ul>
-</p>
-
 <details>
-<summary>📸 <strong>Скриншоты</strong></summary>
+<summary>📸 <h1>Скриншоты</h1></summary>
 
-*Содержимое раздела.*
+Содержимое раздела.
 
 </details>
 
 <details>
-<summary>📋 <strong>Описание</strong></summary>
+<summary>📋 <h1>Описание</h1></summary>
 
-*Содержимое раздела.*
-
-</details>
-
-<details>
-<summary>🎯 <strong>Модель угроз</strong></summary>
-
-*Содержимое раздела.*
+Содержимое раздела.
 
 </details>
 
 <details>
-<summary>🏗️ <strong>Инфраструктура</strong></summary>
+<summary>🎯 <h1>Модель угроз</h1></summary>
 
-*Содержимое раздела.*
+Содержимое раздела.
 
 </details>
 
 <details>
-<summary>📐 <strong>Архитектура</strong></summary>
+<summary>🏗️ <h1>Инфраструктура</h1></summary>
+
+Содержимое раздела.
+
+</details>
+
+<details>
+<summary>📐 <h1>Архитектура</h1></summary>
 
 ### C4 - L1
 
-*Содержимое подраздела.*
+Содержимое подраздела.
 
 <details>
-<summary><strong>C4 - L2</strong></summary>
+<summary><h1>C4 - L2</h1></summary>
 
-*Содержимое подраздела.*
+Содержимое подраздела.
 
 </details>
 
 <details>
-<summary><strong>C4 - L3</strong></summary>
+<summary><h1>C4 - L3</h1></summary>
 
-*Содержимое подраздела.*
-
-</details>
+Содержимое подраздела.
 
 </details>
-
-<details>
-<summary>🌍 <strong>Описание окружений</strong></summary>
-
-<details>
-<summary>🟢 <strong>Dev</strong></summary>
-
-*Содержимое подраздела.*
 
 </details>
 
 <details>
-<summary>🟡 <strong>Stage</strong></summary>
+<summary>🌍 <h1>Описание окружений</h1></summary>
 
-*Содержимое подраздела.*
+<details>
+<summary>🟢 <h1>Dev</h1></summary>
+
+Содержимое подраздела.
 
 </details>
 
 <details>
-<summary>🔴 <strong>Prod</strong></summary>
+<summary>🟡 <h1>Stage</h1></summary>
 
-*Содержимое подраздела.*
+Содержимое подраздела.
+
+</details>
+
+<details>
+<summary>🔴 <h1>Prod</h1></summary>
+
+Содержимое подраздела.
 
 </details>
 
