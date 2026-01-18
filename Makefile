@@ -12,6 +12,10 @@ down:
 build:
 	docker-compose -f docker-compose/docker-compose-dev.yml build
 
+# Перезагрузка контейнеров
+reload:
+	docker-compose -f docker-compose/docker-compose-dev.yml restart
+
 # Только собрать весь dev-стек (БЕЗ КЕША)
 rebuild:
 	docker-compose -f docker-compose/docker-compose-dev.yml build --no-cache
@@ -63,6 +67,10 @@ migrate:
 # Прокинуть Django-вский шелл в бэке (не bash!)
 shell:
 	docker-compose -f docker-compose/docker-compose-dev.yml exec backend python3 manage.py shell_plus
+
+# Доустановить на лету библиотеки (бэкэнд)
+pip:
+	docker-compose -f docker-compose/docker-compose-dev.yml exec backend pip3 install -r requirements.txt
 
 # Дропнуть базу данных в dev-окружении и выполнить миграции (если наебнулась схема)
 drop:

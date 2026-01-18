@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
+from config.storage import MediaMinIOStorage
 
 
 class Source(models.Model):
@@ -34,6 +35,15 @@ class Source(models.Model):
     captured_at = models.DateTimeField('Дата сохранения', auto_now_add=True)
     raw_content = models.TextField('Исходный контент', blank=True)
     metadata = models.JSONField('Метаданные', default=dict, blank=True)
+
+    source_file = models.FileField(
+        'Файл для импорта', 
+        upload_to='info_sources/', 
+        storage=MediaMinIOStorage(),
+        blank=True, 
+        null=True,
+        max_length=500
+    )
     
     class Meta:
         verbose_name = 'Источник информации'
@@ -391,52 +401,52 @@ class ProjectContribution(models.Model):
         unique_together = ['node', 'project']
 
 
-class Template(models.Model):
-    """Шаблоны для обработки информации"""
-    TEMPLATE_TYPES = [
-        ('SOURCE_PROCESSING', 'Обработка источника'),
-        ('NODE_CREATION', 'Создание узла'),
-        ('OBSERVATION', 'Наблюдение под микроскопом'),
-        ('RESEARCH_PAPER', 'Научная статья'),
-        ('LITERATURE_REVIEW', 'Обзор литературы'),
-    ]
+# class Template(models.Model):
+#     """Шаблоны для обработки информации"""
+#     TEMPLATE_TYPES = [
+#         ('SOURCE_PROCESSING', 'Обработка источника'),
+#         ('NODE_CREATION', 'Создание узла'),
+#         ('OBSERVATION', 'Наблюдение под микроскопом'),
+#         ('RESEARCH_PAPER', 'Научная статья'),
+#         ('LITERATURE_REVIEW', 'Обзор литературы'),
+#     ]
     
-    user = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
-        related_name='templates',
-        verbose_name='Пользователь'
-    )
-    name = models.CharField('Название шаблона', max_length=200)
-    template_type = models.CharField(
-        'Тип шаблона', 
-        max_length=50, 
-        choices=TEMPLATE_TYPES
-    )
-    structure = models.JSONField(
-        'Структура шаблона', 
-        default=dict, 
-        help_text="Структура шаблона в формате JSON (поля, разделы)"
-    )
-    default_tags = models.ManyToManyField(
-        Tag, 
-        blank=True,
-        verbose_name='Теги по умолчанию'
-    )
-    default_area = models.ForeignKey(
-        Area, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True,
-        verbose_name='Область по умолчанию'
-    )
+#     user = models.ForeignKey(
+#         User, 
+#         on_delete=models.CASCADE, 
+#         related_name='templates',
+#         verbose_name='Пользователь'
+#     )
+#     name = models.CharField('Название шаблона', max_length=200)
+#     template_type = models.CharField(
+#         'Тип шаблона', 
+#         max_length=50, 
+#         choices=TEMPLATE_TYPES
+#     )
+#     structure = models.JSONField(
+#         'Структура шаблона', 
+#         default=dict, 
+#         help_text="Структура шаблона в формате JSON (поля, разделы)"
+#     )
+#     default_tags = models.ManyToManyField(
+#         Tag, 
+#         blank=True,
+#         verbose_name='Теги по умолчанию'
+#     )
+#     default_area = models.ForeignKey(
+#         Area, 
+#         on_delete=models.SET_NULL, 
+#         null=True, 
+#         blank=True,
+#         verbose_name='Область по умолчанию'
+#     )
     
-    class Meta:
-        verbose_name = 'Шаблон'
-        verbose_name_plural = 'Шаблоны'
+#     class Meta:
+#         verbose_name = 'Шаблон'
+#         verbose_name_plural = 'Шаблоны'
     
-    def __str__(self):
-        return f"{self.name} ({self.get_template_type_display()})"
+#     def __str__(self):
+#         return f"{self.name} ({self.get_template_type_display()})"
 
 
 class DailyReview(models.Model):
@@ -499,47 +509,47 @@ class NodeReview(models.Model):
         unique_together = ['review', 'node']
 
 
-class ImportJob(models.Model):
-    """Задача импорта данных из внешних источников"""
-    SOURCE_TYPES = [
-        ('POCKET', 'Pocket'),
-        ('READWISE', 'Readwise'),
-        ('YOUTUBE', 'YouTube History'),
-        ('BOOKMARKS', 'Браузерные закладки'),
-        ('OBSIDIAN', 'Obsidian'),
-        ('NOTION', 'Notion'),
-    ]
+# class ImportJob(models.Model):
+#     """Задача импорта данных из внешних источников"""
+#     SOURCE_TYPES = [
+#         ('POCKET', 'Pocket'),
+#         ('READWISE', 'Readwise'),
+#         ('YOUTUBE', 'YouTube History'),
+#         ('BOOKMARKS', 'Браузерные закладки'),
+#         ('OBSIDIAN', 'Obsidian'),
+#         ('NOTION', 'Notion'),
+#     ]
     
-    user = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
-        related_name='import_jobs',
-        verbose_name='Пользователь'
-    )
-    source_type = models.CharField(
-        'Тип источника', 
-        max_length=20, 
-        choices=SOURCE_TYPES
-    )
-    source_file = models.FileField(
-        'Файл для импорта', 
-        upload_to='imports/', 
-        blank=True, 
-        null=True
-    )
-    status = models.CharField('Статус', max_length=20, default='PENDING')
-    items_processed = models.IntegerField('Обработано элементов', default=0)
-    items_total = models.IntegerField('Всего элементов', default=0)
-    errors = models.JSONField('Ошибки', default=list, blank=True)
-    created_at = models.DateTimeField('Дата создания', auto_now_add=True)
-    completed_at = models.DateTimeField('Дата завершения', null=True, blank=True)
+#     user = models.ForeignKey(
+#         User, 
+#         on_delete=models.CASCADE, 
+#         related_name='import_jobs',
+#         verbose_name='Пользователь'
+#     )
+#     source_type = models.CharField(
+#         'Тип источника', 
+#         max_length=20, 
+#         choices=SOURCE_TYPES
+#     )
+#     source_file = models.FileField(
+#         'Файл для импорта', 
+#         upload_to='imports/', 
+#         blank=True, 
+#         null=True
+#     )
+#     status = models.CharField('Статус', max_length=20, default='PENDING')
+#     items_processed = models.IntegerField('Обработано элементов', default=0)
+#     items_total = models.IntegerField('Всего элементов', default=0)
+#     errors = models.JSONField('Ошибки', default=list, blank=True)
+#     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
+#     completed_at = models.DateTimeField('Дата завершения', null=True, blank=True)
     
-    class Meta:
-        verbose_name = 'Задача импорта'
-        verbose_name_plural = 'Задачи импорта'
+#     class Meta:
+#         verbose_name = 'Задача импорта'
+#         verbose_name_plural = 'Задачи импорта'
     
-    def __str__(self):
-        return f"Импорт {self.get_source_type_display()} для {self.user}"
+#     def __str__(self):
+#         return f"Импорт {self.get_source_type_display()} для {self.user}"
 
 
 class DashboardMetric(models.Model):

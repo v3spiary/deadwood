@@ -163,7 +163,7 @@ class TrainingSession(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(10)],
         verbose_name="Интенсивность (1-10)"
     )
-    exercises = models.TextField(verbose_name="Упражнения (JSON или текст)")
+    exercises = models.TextField(verbose_name="Упражнения (JSON или текст)", blank=True, null=True)
     notes = models.TextField(blank=True, verbose_name="Заметки")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

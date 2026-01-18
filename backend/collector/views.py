@@ -6,10 +6,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Count, Sum, Avg
 from django.utils import timezone
 from datetime import timedelta
+from rest_framework import parsers
 
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParameter, OpenApiTypes
 from drf_spectacular.types import OpenApiTypes
-import json
 
 from .models import *
 from .serializers import *
@@ -18,7 +18,7 @@ from .serializers import *
 @extend_schema(tags=["Collector"])
 class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
-    # permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['parent']
     search_fields = ['name', 'description']
@@ -37,7 +37,7 @@ class TagViewSet(viewsets.ModelViewSet):
 @extend_schema(tags=["Collector"])
 class AreaViewSet(viewsets.ModelViewSet):
     serializer_class = AreaSerializer
-    # permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['priority']
     search_fields = ['name', 'description']
@@ -56,8 +56,9 @@ class AreaViewSet(viewsets.ModelViewSet):
 @extend_schema(tags=["Collector"])
 class SourceViewSet(viewsets.ModelViewSet):
     serializer_class = SourceSerializer
-    # permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    parser_classes = [parsers.MultiPartParser]
     filterset_fields = ['source_type']
     search_fields = ['title', 'description', 'url']
     ordering_fields = ['captured_at', 'title']
@@ -65,13 +66,13 @@ class SourceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Source.objects.filter(user=self.request.user)
 
-    @action(detail=False, methods=['post'])
-    def bulk_create(self, request):
-        """Массовое создание источников"""
-        serializer = self.get_serializer(data=request.data.get('sources', []), many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # @action(detail=False, methods=['post'])
+    # def bulk_create(self, request):
+    #     """Массовое создание источников"""
+    #     serializer = self.get_serializer(data=request.data.get('sources', []), many=True)
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_create(serializer)
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'])
     def nodes(self, request, pk=None):
@@ -83,7 +84,7 @@ class SourceViewSet(viewsets.ModelViewSet):
 
 @extend_schema(tags=["Collector"])
 class InformationNodeViewSet(viewsets.ModelViewSet):
-    # permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['stage', 'node_type', 'tags', 'areas']
     search_fields = ['title', 'content']
@@ -243,7 +244,7 @@ class InformationNodeViewSet(viewsets.ModelViewSet):
 @extend_schema(tags=["Collector"])
 class NodeLinkViewSet(viewsets.ModelViewSet):
     serializer_class = NodeLinkSerializer
-    # permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['link_type', 'from_node', 'to_node']
 
@@ -285,7 +286,7 @@ class NodeLinkViewSet(viewsets.ModelViewSet):
 @extend_schema(tags=["Collector"])
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
-    # permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status', 'areas']
     search_fields = ['title', 'description']
@@ -349,7 +350,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 @extend_schema(tags=["Collector"])
 class ProcessingSessionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProcessingSessionSerializer
-    # permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['node', 'new_stage', 'previous_stage']
     ordering_fields = ['created_at', 'time_spent']
@@ -378,67 +379,67 @@ class ProcessingSessionViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(summary)
 
 
-@extend_schema(tags=["Collector"])
-class TemplateViewSet(viewsets.ModelViewSet):
-    serializer_class = TemplateSerializer
-    # permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['template_type']
-    search_fields = ['name']
+# @extend_schema(tags=["Collector"])
+# class TemplateViewSet(viewsets.ModelViewSet):
+#     serializer_class = TemplateSerializer
+#     permission_classes = [IsAuthenticated]
+#     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+#     filterset_fields = ['template_type']
+#     search_fields = ['name']
 
-    def get_queryset(self):
-        return Template.objects.filter(user=self.request.user)
+#     def get_queryset(self):
+#         return Template.objects.filter(user=self.request.user)
 
-    @action(detail=True, methods=['post'])
-    def apply(self, request, pk=None):
-        """Применение шаблона для создания узла"""
-        template = self.get_object()
+#     @action(detail=True, methods=['post'])
+#     def apply(self, request, pk=None):
+#         """Применение шаблона для создания узла"""
+#         template = self.get_object()
         
-        # Создаем новый узел на основе шаблона
-        node_data = {
-            'title': request.data.get('title', 'Новый узел'),
-            'content': self._fill_template(template, request.data),
-            'user': request.user
-        }
+#         # Создаем новый узел на основе шаблона
+#         node_data = {
+#             'title': request.data.get('title', 'Новый узел'),
+#             'content': self._fill_template(template, request.data),
+#             'user': request.user
+#         }
         
-        node = InformationNode.objects.create(**node_data)
+#         node = InformationNode.objects.create(**node_data)
         
-        # Применяем теги по умолчанию
-        if template.default_tags.exists():
-            node.tags.set(template.default_tags.all())
+#         # Применяем теги по умолчанию
+#         if template.default_tags.exists():
+#             node.tags.set(template.default_tags.all())
         
-        # Применяем область по умолчанию
-        if template.default_area:
-            AreaMembership.objects.create(
-                node=node,
-                area=template.default_area,
-                relevance=3
-            )
+#         # Применяем область по умолчанию
+#         if template.default_area:
+#             AreaMembership.objects.create(
+#                 node=node,
+#                 area=template.default_area,
+#                 relevance=3
+#             )
         
-        serializer = InformationNodeDetailSerializer(node, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         serializer = InformationNodeDetailSerializer(node, context={'request': request})
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def _fill_template(self, template, data):
-        """Заполнение шаблона данными"""
-        structure = template.structure
-        content = ""
+#     def _fill_template(self, template, data):
+#         """Заполнение шаблона данными"""
+#         structure = template.structure
+#         content = ""
         
-        for field in structure.get('fields', []):
-            field_name = field.get('name')
-            field_value = data.get(field_name, '')
+#         for field in structure.get('fields', []):
+#             field_name = field.get('name')
+#             field_value = data.get(field_name, '')
             
-            if field.get('type') == 'list' and isinstance(field_value, list):
-                field_value = '\n'.join([f'- {item}' for item in field_value])
+#             if field.get('type') == 'list' and isinstance(field_value, list):
+#                 field_value = '\n'.join([f'- {item}' for item in field_value])
             
-            content += f"**{field_name.capitalize()}**: {field_value}\n\n"
+#             content += f"**{field_name.capitalize()}**: {field_value}\n\n"
         
-        return content
+#         return content
 
 
 @extend_schema(tags=["Collector"])
 class DailyReviewViewSet(viewsets.ModelViewSet):
     serializer_class = DailyReviewSerializer
-    # permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['completed', 'date']
     ordering_fields = ['date']
@@ -502,162 +503,162 @@ class DailyReviewViewSet(viewsets.ModelViewSet):
             )
 
 
-@extend_schema(tags=["Collector"])
-class ImportJobViewSet(viewsets.ModelViewSet):
-    serializer_class = ImportJobSerializer
-    # permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['source_type', 'status']
-    ordering_fields = ['created_at', 'completed_at']
+# @extend_schema(tags=["Collector"])
+# class ImportJobViewSet(viewsets.ModelViewSet):
+#     serializer_class = ImportJobSerializer
+#     permission_classes = [IsAuthenticated]
+#     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+#     filterset_fields = ['source_type', 'status']
+#     ordering_fields = ['created_at', 'completed_at']
 
-    def get_queryset(self):
-        return ImportJob.objects.filter(user=self.request.user)
+#     def get_queryset(self):
+#         return ImportJob.objects.filter(user=self.request.user)
 
-    def perform_create(self, serializer):
-        """Запуск задачи импорта после создания"""
-        import_job = serializer.save(user=self.request.user)
+#     def perform_create(self, serializer):
+#         """Запуск задачи импорта после создания"""
+#         import_job = serializer.save(user=self.request.user)
         
-        # В реальном проекте здесь должен быть асинхронный таск (Celery, RQ)
-        # Здесь упрощенный вариант
-        self._process_import(import_job)
+#         # В реальном проекте здесь должен быть асинхронный таск (Celery, RQ)
+#         # Здесь упрощенный вариант
+#         self._process_import(import_job)
 
-    def _process_import(self, import_job):
-        """Обработка импорта (заглушка)"""
-        # В реальном проекте здесь парсинг файла и создание Source объектов
-        import_job.status = 'PROCESSING'
-        import_job.save()
+#     def _process_import(self, import_job):
+#         """Обработка импорта (заглушка)"""
+#         # В реальном проекте здесь парсинг файла и создание Source объектов
+#         import_job.status = 'PROCESSING'
+#         import_job.save()
         
-        # Имитация обработки
-        import time
-        time.sleep(2)
+#         # Имитация обработки
+#         import time
+#         time.sleep(2)
         
-        import_job.status = 'COMPLETED'
-        import_job.items_processed = 10
-        import_job.items_total = 10
-        import_job.completed_at = timezone.now()
-        import_job.save()
+#         import_job.status = 'COMPLETED'
+#         import_job.items_processed = 10
+#         import_job.items_total = 10
+#         import_job.completed_at = timezone.now()
+#         import_job.save()
 
 
-@extend_schema(tags=["Collector"])
-class DashboardViewSet(viewsets.ViewSet):
-    # permission_classes = [IsAuthenticated]
+# @extend_schema(tags=["Collector"])
+# class DashboardViewSet(viewsets.ViewSet):
+#     # permission_classes = [IsAuthenticated]
     
-    @action(detail=False, methods=['get'])
-    def statistics(self, request):
-        """Получение статистики по всем данным"""
-        user = request.user
+#     @action(detail=False, methods=['get'])
+#     def statistics(self, request):
+#         """Получение статистики по всем данным"""
+#         user = request.user
         
-        # Базовые статистики
-        stats = {
-            'total_nodes': InformationNode.objects.filter(user=user).count(),
-            'nodes_by_stage': dict(InformationNode.objects
-                .filter(user=user)
-                .values_list('stage')
-                .annotate(count=Count('id'))
-                .order_by('stage')),
-            'nodes_by_type': dict(InformationNode.objects
-                .filter(user=user)
-                .values_list('node_type')
-                .annotate(count=Count('id'))
-                .order_by('node_type')),
-            'total_sources': Source.objects.filter(user=user).count(),
-            'total_links': NodeLink.objects.filter(
-                from_node__user=user,
-                to_node__user=user
-            ).count(),
-            'total_projects': Project.objects.filter(user=user).count(),
-        }
+#         # Базовые статистики
+#         stats = {
+#             'total_nodes': InformationNode.objects.filter(user=user).count(),
+#             'nodes_by_stage': dict(InformationNode.objects
+#                 .filter(user=user)
+#                 .values_list('stage')
+#                 .annotate(count=Count('id'))
+#                 .order_by('stage')),
+#             'nodes_by_type': dict(InformationNode.objects
+#                 .filter(user=user)
+#                 .values_list('node_type')
+#                 .annotate(count=Count('id'))
+#                 .order_by('node_type')),
+#             'total_sources': Source.objects.filter(user=user).count(),
+#             'total_links': NodeLink.objects.filter(
+#                 from_node__user=user,
+#                 to_node__user=user
+#             ).count(),
+#             'total_projects': Project.objects.filter(user=user).count(),
+#         }
         
-        # Время обработки
-        today = timezone.now().date()
-        week_ago = timezone.now() - timedelta(days=7)
+#         # Время обработки
+#         today = timezone.now().date()
+#         week_ago = timezone.now() - timedelta(days=7)
         
-        stats['daily_processing_time'] = ProcessingSession.objects.filter(
-            user=user,
-            created_at__date=today
-        ).aggregate(total=Sum('time_spent'))['total'] or 0
+#         stats['daily_processing_time'] = ProcessingSession.objects.filter(
+#             user=user,
+#             created_at__date=today
+#         ).aggregate(total=Sum('time_spent'))['total'] or 0
         
-        stats['weekly_processing_time'] = ProcessingSession.objects.filter(
-            user=user,
-            created_at__gte=week_ago
-        ).aggregate(total=Sum('time_spent'))['total'] or 0
+#         stats['weekly_processing_time'] = ProcessingSession.objects.filter(
+#             user=user,
+#             created_at__gte=week_ago
+#         ).aggregate(total=Sum('time_spent'))['total'] or 0
         
-        # Самые используемые теги
-        from django.db.models import Count
-        stats['most_used_tags'] = list(
-            Tag.objects.filter(user=user)
-            .annotate(usage_count=Count('nodes'))
-            .order_by('-usage_count')[:10]
-            .values('id', 'name', 'color', 'usage_count')
-        )
+#         # Самые используемые теги
+#         from django.db.models import Count
+#         stats['most_used_tags'] = list(
+#             Tag.objects.filter(user=user)
+#             .annotate(usage_count=Count('nodes'))
+#             .order_by('-usage_count')[:10]
+#             .values('id', 'name', 'color', 'usage_count')
+#         )
         
-        return Response(stats)
+#         return Response(stats)
     
-    @action(detail=False, methods=['get'])
-    def recent_activity(self, request):
-        """Последние активности"""
-        user = request.user
+#     @action(detail=False, methods=['get'])
+#     def recent_activity(self, request):
+#         """Последние активности"""
+#         user = request.user
         
-        # Последние сессии обработки
-        recent_sessions = ProcessingSession.objects.filter(
-            user=user
-        ).order_by('-created_at')[:10]
+#         # Последние сессии обработки
+#         recent_sessions = ProcessingSession.objects.filter(
+#             user=user
+#         ).order_by('-created_at')[:10]
         
-        # Последние созданные узлы
-        recent_nodes = InformationNode.objects.filter(
-            user=user
-        ).order_by('-created_at')[:10]
+#         # Последние созданные узлы
+#         recent_nodes = InformationNode.objects.filter(
+#             user=user
+#         ).order_by('-created_at')[:10]
         
-        # Последние обзоры
-        recent_reviews = DailyReview.objects.filter(
-            user=user
-        ).order_by('-date')[:5]
+#         # Последние обзоры
+#         recent_reviews = DailyReview.objects.filter(
+#             user=user
+#         ).order_by('-date')[:5]
         
-        return Response({
-            'recent_sessions': ProcessingSessionSerializer(
-                recent_sessions, many=True, context={'request': request}
-            ).data,
-            'recent_nodes': InformationNodeListSerializer(
-                recent_nodes, many=True, context={'request': request}
-            ).data,
-            'recent_reviews': DailyReviewSerializer(
-                recent_reviews, many=True, context={'request': request}
-            ).data,
-        })
+#         return Response({
+#             'recent_sessions': ProcessingSessionSerializer(
+#                 recent_sessions, many=True, context={'request': request}
+#             ).data,
+#             'recent_nodes': InformationNodeListSerializer(
+#                 recent_nodes, many=True, context={'request': request}
+#             ).data,
+#             'recent_reviews': DailyReviewSerializer(
+#                 recent_reviews, many=True, context={'request': request}
+#             ).data,
+#         })
     
-    @action(detail=False, methods=['get'])
-    def knowledge_graph(self, request):
-        """Граф знаний (первые 50 узлов)"""
-        user = request.user
+#     @action(detail=False, methods=['get'])
+#     def knowledge_graph(self, request):
+#         """Граф знаний (первые 50 узлов)"""
+#         user = request.user
         
-        nodes = InformationNode.objects.filter(user=user)[:50]
-        links = NodeLink.objects.filter(
-            from_node__in=nodes,
-            to_node__in=nodes
-        )
+#         nodes = InformationNode.objects.filter(user=user)[:50]
+#         links = NodeLink.objects.filter(
+#             from_node__in=nodes,
+#             to_node__in=nodes
+#         )
         
-        node_data = []
-        for node in nodes:
-            node_data.append({
-                'id': node.id,
-                'title': node.title,
-                'stage': node.stage,
-                'stage_display': node.get_stage_display(),
-                'type': node.node_type,
-                'type_display': node.get_node_type_display(),
-            })
+#         node_data = []
+#         for node in nodes:
+#             node_data.append({
+#                 'id': node.id,
+#                 'title': node.title,
+#                 'stage': node.stage,
+#                 'stage_display': node.get_stage_display(),
+#                 'type': node.node_type,
+#                 'type_display': node.get_node_type_display(),
+#             })
         
-        link_data = []
-        for link in links:
-            link_data.append({
-                'source': link.from_node_id,
-                'target': link.to_node_id,
-                'type': link.link_type,
-                'type_display': link.get_link_type_display(),
-                'strength': link.strength,
-            })
+#         link_data = []
+#         for link in links:
+#             link_data.append({
+#                 'source': link.from_node_id,
+#                 'target': link.to_node_id,
+#                 'type': link.link_type,
+#                 'type_display': link.get_link_type_display(),
+#                 'strength': link.strength,
+#             })
         
-        return Response({
-            'nodes': node_data,
-            'links': link_data
-        })
+#         return Response({
+#             'nodes': node_data,
+#             'links': link_data
+#         })

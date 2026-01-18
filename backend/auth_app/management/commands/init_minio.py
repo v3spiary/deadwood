@@ -1,4 +1,4 @@
-"""Инициализация S3-хранилища MinIO. Пока не используется, но в перспективе будет использоваться."""
+"""Инициализация S3-хранилища MinIO."""
 
 import boto3
 from botocore.exceptions import ClientError
@@ -23,14 +23,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Запуск действий команды."""
         bucket_name = options["bucket_name"]
-
-        if not settings.USE_S3:
-            self.stdout.write(
-                self.style.WARNING(
-                    "S3 storage is disabled. Skipping MinIO initialization."
-                )
-            )
-            return
 
         try:
             # Create S3 client
@@ -62,7 +54,7 @@ class Command(BaseCommand):
                     raise CommandError(f"Error checking bucket: {e}")
 
             # Create folder structure
-            folders = ["dumps/", "static/", "media/"]
+            folders = ["media/"]
             for folder in folders:
                 try:
                     s3_client.put_object(Bucket=bucket_name, Key=folder)

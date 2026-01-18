@@ -12,6 +12,7 @@ python3 manage.py collectstatic --no-input
 python3 manage.py makemigrations --no-input
 python3 manage.py migrate --no-input
 python3 manage.py initdb
+python3 manage.py init_minio
 python manage.py init_tracker --username admin
 
 # curl -X PUT "opensearch:9200/tracker_metrics" -H 'Content-Type: application/json' -d'

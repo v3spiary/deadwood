@@ -90,7 +90,7 @@ class SourceSerializer(serializers.ModelSerializer):
         model = Source
         fields = ('id', 'title', 'url', 'source_type', 'type_display', 
                  'description', 'captured_at', 'raw_content', 'metadata',
-                 'nodes_count', 'user')
+                 'nodes_count', 'user', 'source_file')
         read_only_fields = ('user', 'captured_at', 'nodes_count')
 
     def get_nodes_count(self, obj):
@@ -269,28 +269,28 @@ class ProjectContributionSerializer(serializers.ModelSerializer):
         read_only_fields = ('added_at',)
 
 
-class TemplateSerializer(serializers.ModelSerializer):
-    type_display = serializers.CharField(source='get_template_type_display', read_only=True)
-    default_tags = TagSerializer(many=True, read_only=True)
-    default_area_name = serializers.CharField(source='default_area.name', read_only=True)
-    tag_ids = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Tag.objects.all(),
-        write_only=True,
-        source='default_tags',
-        required=False
-    )
+# class TemplateSerializer(serializers.ModelSerializer):
+#     type_display = serializers.CharField(source='get_template_type_display', read_only=True)
+#     default_tags = TagSerializer(many=True, read_only=True)
+#     default_area_name = serializers.CharField(source='default_area.name', read_only=True)
+#     tag_ids = serializers.PrimaryKeyRelatedField(
+#         many=True,
+#         queryset=Tag.objects.all(),
+#         write_only=True,
+#         source='default_tags',
+#         required=False
+#     )
 
-    class Meta:
-        model = Template
-        fields = ('id', 'name', 'template_type', 'type_display', 'structure',
-                 'default_tags', 'default_area', 'default_area_name',
-                 'tag_ids', 'user')
-        read_only_fields = ('user',)
+#     class Meta:
+#         model = Template
+#         fields = ('id', 'name', 'template_type', 'type_display', 'structure',
+#                  'default_tags', 'default_area', 'default_area_name',
+#                  'tag_ids', 'user')
+#         read_only_fields = ('user',)
 
-    def create(self, validated_data):
-        validated_data['user'] = self.context['request'].user
-        return super().create(validated_data)
+#     def create(self, validated_data):
+#         validated_data['user'] = self.context['request'].user
+#         return super().create(validated_data)
 
 
 class DailyReviewSerializer(serializers.ModelSerializer):
@@ -328,34 +328,34 @@ class NodeReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ('reviewed_at',)
 
 
-class ImportJobSerializer(serializers.ModelSerializer):
-    type_display = serializers.CharField(source='get_source_type_display', read_only=True)
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    progress_percentage = serializers.SerializerMethodField()
-    duration_seconds = serializers.SerializerMethodField()
+# class ImportJobSerializer(serializers.ModelSerializer):
+#     type_display = serializers.CharField(source='get_source_type_display', read_only=True)
+#     status_display = serializers.CharField(source='get_status_display', read_only=True)
+#     progress_percentage = serializers.SerializerMethodField()
+#     duration_seconds = serializers.SerializerMethodField()
 
-    class Meta:
-        model = ImportJob
-        fields = ('id', 'source_type', 'type_display', 'source_file',
-                 'status', 'status_display', 'items_processed', 'items_total',
-                 'errors', 'progress_percentage', 'duration_seconds',
-                 'created_at', 'completed_at', 'user')
-        read_only_fields = ('user', 'created_at', 'completed_at', 'errors',
-                          'items_processed', 'items_total', 'status')
+#     class Meta:
+#         model = ImportJob
+#         fields = ('id', 'source_type', 'type_display', 'source_file',
+#                  'status', 'status_display', 'items_processed', 'items_total',
+#                  'errors', 'progress_percentage', 'duration_seconds',
+#                  'created_at', 'completed_at', 'user')
+#         read_only_fields = ('user', 'created_at', 'completed_at', 'errors',
+#                           'items_processed', 'items_total', 'status')
 
-    def get_progress_percentage(self, obj):
-        if obj.items_total > 0:
-            return (obj.items_processed / obj.items_total) * 100
-        return 0
+#     def get_progress_percentage(self, obj):
+#         if obj.items_total > 0:
+#             return (obj.items_processed / obj.items_total) * 100
+#         return 0
 
-    def get_duration_seconds(self, obj):
-        if obj.completed_at and obj.created_at:
-            return (obj.completed_at - obj.created_at).total_seconds()
-        return None
+#     def get_duration_seconds(self, obj):
+#         if obj.completed_at and obj.created_at:
+#             return (obj.completed_at - obj.created_at).total_seconds()
+#         return None
 
-    def create(self, validated_data):
-        validated_data['user'] = self.context['request'].user
-        return super().create(validated_data)
+#     def create(self, validated_data):
+#         validated_data['user'] = self.context['request'].user
+#         return super().create(validated_data)
 
 
 class DashboardMetricSerializer(serializers.ModelSerializer):

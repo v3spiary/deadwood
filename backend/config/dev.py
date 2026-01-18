@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "django_filters",
     "corsheaders",
+    "storages",
     # Кастомные приложения
     "auth_app",
     "chatbot",
@@ -459,6 +460,15 @@ USE_I18N = True
 
 USE_TZ = True
 
+# AWS S3/MinIO settings
+AWS_ACCESS_KEY_ID = environ.get("MINIO_ACCESS_KEY", "minioadmin")
+AWS_SECRET_ACCESS_KEY = environ.get("MINIO_SECRET_KEY", "minioadmin")
+AWS_STORAGE_BUCKET_NAME = environ.get("MINIO_BUCKET_NAME", "mybucket")
+AWS_S3_ENDPOINT_URL = environ.get("MINIO_ENDPOINT_URL", "http://minio:9000")
+AWS_S3_CUSTOM_DOMAIN = None
+AWS_DEFAULT_ACL = None
+AWS_S3_VERIFY = False
+AWS_S3_FILE_OVERWRITE = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -466,6 +476,14 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 STATIC_ROOT = STATIC_DIR
+
+DEFAULT_FILE_STORAGE = "config.storage.MediaMinIOStorage"
+
+# Media files settings
+MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/"
+MEDIA_ROOT = ""
+MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True # Optional: create bucket if it doesn't exist
+MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY = True # Optional: set public policy for media bucket
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
